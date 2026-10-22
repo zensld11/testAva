@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1790079389944-1" author="user">
+        <createSequence incrementBy="50" sequenceName="revinfo_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1790079389944-2" author="user">
+        <createTable tableName="characters">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_characters"/>
+            </column>
+            <column name="full_name" remarks="Полное имя персонажа" type="VARCHAR(255)"/>
+            <column name="nation_id" type="BIGINT"/>
+            <column name="description" remarks="Описание персонжа" type="VARCHAR(255)"/>
+            <column name="place_if_birth" remarks="Место рождения" type="VARCHAR(255)"/>
+            <column name="age" remarks="Возраст персонажа" type="BIGINT"/>
+            <column name="power_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1790079389944-3" author="user">
+        <createTable tableName="nations">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_nations"/>
+            </column>
+            <column name="nation_name" remarks="Название нации" type="VARCHAR(255)"/>
+            <column name="total_population" remarks="Численность населения" type="BIGINT"/>
+            <column name="first_avatar" remarks="Первый Аватар вышедший из нации" type="VARCHAR(255)"/>
+            <column name="type_of_government" remarks="Вид Правления" type="SMALLINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1790079389944-4" author="user">
+        <createTable tableName="revchanges">
+            <column name="rev" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entityname" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1790079389944-5" author="user">
+        <createTable tableName="revinfo">
+            <column name="rev" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_revinfo"/>
+            </column>
+            <column name="revtstmp" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1790079389944-6" author="user">
+        <createTable tableName="tribes">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_tribes"/>
+            </column>
+            <column name="tribe_name" remarks="Название племени" type="VARCHAR(255)"/>
+            <column name="location" remarks="Местоположение" type="VARCHAR(255)"/>
+            <column name="nationality" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1790079389944-7" author="user">
+        <addUniqueConstraint columnNames="nationality" constraintName="uc_tribes_nationality" tableName="tribes"/>
+    </changeSet>
+
+    <changeSet id="1790079389944-8" author="user">
+        <addForeignKeyConstraint baseColumnNames="nation_id" baseTableName="characters"
+                                 constraintName="FK_CHARACTERS_ON_NATION" referencedColumnNames="id"
+                                 referencedTableName="nations"/>
+    </changeSet>
+
+    <changeSet id="1790079389944-9" author="user">
+        <addForeignKeyConstraint baseColumnNames="nationality" baseTableName="tribes"
+                                 constraintName="FK_TRIBES_ON_NATIONALITY" referencedColumnNames="id"
+                                 referencedTableName="nations"/>
+    </changeSet>
+
+    <changeSet id="1790079389944-10" author="user">
+        <addForeignKeyConstraint baseColumnNames="rev" baseTableName="revchanges"
+                                 constraintName="fk_revchanges_on_default_tracking_modified_entities_changelog"
+                                 referencedColumnNames="rev" referencedTableName="revinfo"/>
+    </changeSet>
+</databaseChangeLog>
