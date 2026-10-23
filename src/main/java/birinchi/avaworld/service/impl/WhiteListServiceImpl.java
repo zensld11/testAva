@@ -8,8 +8,8 @@ import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,12 +17,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
+import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -91,53 +90,39 @@ public class WhiteListServiceImpl implements WhiteListService {
         return keyName;
     }
 
-//    @Transactional(readOnly = true)
-//    public ResponseEntity<InputStreamResource> get(Long id) {
-//        Optional<WhiteListCounterparty> result = Optional.of(repository.findById(id)
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
-//        try {
-//            S3Object s3Object = amazonS3.getObject(bucketName, result.get().getFrontUri());
-//            return ResponseEntity.ok()
-//                    .contentType(MediaType.parseMediaType(s3Object.getObjectMetadata().getUserMetadata().get("contentType")
-//                    ))
-//                    .header("Content-Disposition", "inline: fileName=\"" +
-//                            s3Object.getObjectMetadata().getUserMetadata().get("fileName") + "\"")
-//                    .body(new InputStreamResource((InputStreamSource) s3Object.getObjectMetadata().getUserMetadata()));
-//        } catch (Exception e) {
-//            throw new RuntimeException("Error", e);
-//        }
-//    }
 
-    public ResponseEntity<InputStreamResource> get(Long id) {
+    public ResponseEntity<Map<String, String>> get(Long id) {
         WhiteListCounterparty entity = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Map<String, String> res = new HashMap<>();
 
+        if (entity.getFrontUri() != null && entity.getBackUri() != null) {
+            res.put("front", makeBase64FromDoc(getDocFromS3(entity.getFrontUri())));
+            res.put("back", makeBase64FromDoc(getDocFromS3(entity.getBackUri())));
+            return ResponseEntity.ok(res);
+        }
+        res.put("Empty Key", "Empty data");
+        return ResponseEntity.ok(res);
+    }
+
+    private S3Object getDocFromS3(String docUri) {
         S3Object s3Object;
         try {
-            s3Object = amazonS3.getObject(bucketName, entity.getFrontUri());
+            s3Object = amazonS3.getObject(bucketName, docUri);
         } catch (AmazonS3Exception e) {
             if (e.getStatusCode() == 404) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found in storage");
             }
             throw e;
         }
+        return s3Object;
+    }
 
-        ObjectMetadata meta = s3Object.getObjectMetadata();
-
-        String contentType = meta.getContentType() != null
-                ? meta.getContentType()
-                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
-
-        String encodedName = meta.getUserMetadata().get("filename");
-        String fileName = encodedName != null
-                ? URLDecoder.decode(encodedName, StandardCharsets.UTF_8)
-                : "file";
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .contentLength(meta.getContentLength())
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.inline().filename(fileName, StandardCharsets.UTF_8).build().toString())
-                .body(new InputStreamResource(s3Object.getObjectContent()));
+    private String makeBase64FromDoc(S3Object s3Object) {
+        try (S3ObjectInputStream in = s3Object.getObjectContent()) {
+            return Base64.getEncoder().encodeToString(in.readAllBytes());
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read document from S3", e);
+        }
     }
 }
