@@ -1,10 +1,8 @@
 package birinchi.avaworld.controller;
 
 
-import birinchi.avaworld.model.entity.WhiteListCounterparty;
 import birinchi.avaworld.service.WhiteListService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController()
 @RequestMapping("/test")
@@ -38,7 +37,7 @@ public class WhiteListController {
 //    }
 
     @GetMapping("/{id}/document")
-    public ResponseEntity<InputStreamResource> getDocument(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> getDocument(@PathVariable Long id) {
         return service.get(id);
     }
 
