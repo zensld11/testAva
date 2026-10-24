@@ -12,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class S3ClientConfiguration {
-    @Value("${s3.endpoint}")
-    private String endpoint;
 
     @Value("${s3.access-key}")
     private String accessKey;

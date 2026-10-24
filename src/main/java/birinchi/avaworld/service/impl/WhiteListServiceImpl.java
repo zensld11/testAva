@@ -105,7 +105,8 @@ public class WhiteListServiceImpl implements WhiteListService {
         return ResponseEntity.ok(res);
     }
 
-    private S3Object getDocFromS3(String docUri) {
+    @Override
+    public S3Object getDocFromS3(String docUri) {
         S3Object s3Object;
         try {
             s3Object = amazonS3.getObject(bucketName, docUri);
