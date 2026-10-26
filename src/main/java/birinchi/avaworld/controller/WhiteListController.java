@@ -26,16 +26,6 @@ public class WhiteListController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
-//    @GetMapping("/{id}/document")
-//    public ResponseEntity<byte[]> getDocument(@PathVariable Long id) {
-//        WhiteListCounterparty entity = service.get(id);
-//        byte[] data = entity.getDocument();
-//
-//        return ResponseEntity.ok()
-//                .contentType(detectType(data))
-//                .body(data);
-//    }
-
     @GetMapping("/{id}/document")
     public ResponseEntity<Map<String, String>> getDocument(@PathVariable Long id) {
         return service.get(id);
